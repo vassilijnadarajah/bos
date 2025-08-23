@@ -3,6 +3,7 @@
 // packages@vassilijnadarajah.de
 
 pub mod point2d;
+pub mod geometry;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
