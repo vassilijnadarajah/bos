@@ -4,6 +4,71 @@
 
 use crate::point2d::{AsPoint2D, Point2D};
 
+/// Creates a buffer polygon around a polyline represented by a vector of 2D points.
+///
+/// ## Parameters
+/// - `line`: Reference to a vector of `Point2D` representing the polyline.
+/// - `buffer`: The buffer distance (width) to offset from the line.
+///
+/// ## Returns
+/// Returns a vector of `Point2D` representing the buffered polygon around the input line.
+/// If the input line has fewer than two points, returns an empty vector.
+///
+/// ## Edge Cases
+/// - If `line` has less than two points, no buffer is created and `None` is returned.
+/// - Handles parallel segments by using helper points for intersection.
+///
+/// ## Examples
+/// ```
+/// let line = vec![Point2D::new(0.0, 0.0), Point2D::new(1.0, 1.0)];
+/// let buffer = 0.5;
+/// let buffered = create_line_buffer(&line, buffer);
+/// ```
+fn create_line_buffer(line: &Vec<Point2D>, buffer: f64) -> Option<Vec<Option<Point2D>>> {
+    let mut buffered_line: Vec<Option<Point2D>> = vec![None; 2 * line.len()];
+    if line.len() < 2 {
+        return None; // Not enough points to create a buffer
+    }
+    for i in 0..line.len() {
+        let current = &line[i];
+        let next = if i < line.len() - 1 { Some(&line[i + 1]) } else { None };
+        let previous = if i > 0 { Some(&line[i - 1]) } else { None };
+        let last_index = buffered_line.len() - 1;
+
+        if previous.is_none() {
+            let new_point_right = get_orthogonal_point2d(current, next.unwrap(), buffer);
+            let new_point_left = *current + (*current - new_point_right);
+            buffered_line[i] = Some(new_point_right);
+            buffered_line[last_index - i] = Some(new_point_left);
+        } else if next.is_none() {
+            let new_point_right = get_orthogonal_point2d(current, previous.unwrap(), -buffer);
+            let new_point_left = *current + (*current - new_point_right);
+            buffered_line[i] = Some(new_point_right);
+            buffered_line[last_index - i] = Some(new_point_left);
+        } else {
+            // Get helper points
+            let h1 = get_orthogonal_point2d(previous.unwrap(), current, buffer);
+            let h2 = h1 + (*current - *previous.unwrap());
+            let h3 = get_orthogonal_point2d(current, next.unwrap(), buffer);
+            let h4 = h3 + (*next.unwrap() - *current);
+
+            // Calc intersection
+            let intersection = calc_line_intersection(&h1, &h2, &h3, &h4);
+            if let Some(intersection_point) = intersection {
+                buffered_line[i] = Some(intersection_point);
+            } else {
+                buffered_line[i] = Some(h2); // lines are parallel, hence use h2
+            }
+
+            buffered_line[last_index - i] = Some(*current - buffered_line[i].unwrap() + *current);
+        }
+    }
+
+    buffered_line.push(buffered_line[0]); // Close the polygon
+
+    Some(buffered_line)
+}
+
 /// Get the orthogonal point to the line segment (p1, p2) at a given buffer width.
 fn get_orthogonal_point2d(p1: &Point2D, p2: &Point2D, buffer: f64) -> Point2D {
     let direction = *p2 - *p1;
@@ -81,5 +146,51 @@ mod tests {
         let expected_point = Point2D::new((buffer.powi(2) / 2.0).sqrt(), -(buffer.powi(2) / 2.0).sqrt());
         assert!((ortho_point.x - expected_point.x).abs() < 1e-10);
         assert!((ortho_point.y - expected_point.y).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_create_line_buffer_simple_line() {
+        let line = vec![Point2D::new(0.0, 0.0), Point2D::new(1.0, 1.0)];
+        let buffer = 0.5;
+        let buffered_line = create_line_buffer(&line, buffer).unwrap();
+        let a = (buffer.powi(2) / 2.0).sqrt();
+        assert_eq!(buffered_line.len(), 5);
+        assert!((buffered_line[0].unwrap().x - a).abs() < 1e-10);
+        assert!((buffered_line[0].unwrap().y - (-a)).abs() < 1e-10);
+        assert!((buffered_line[1].unwrap().x - (1.0 + a)).abs() < 1e-10);
+        assert!((buffered_line[1].unwrap().y - (1.0 - a)).abs() < 1e-10);
+        assert!((buffered_line[2].unwrap().x - (1.0 - a)).abs() < 1e-10);
+        assert!((buffered_line[2].unwrap().y - (1.0 + a)).abs() < 1e-10);
+        assert!((buffered_line[3].unwrap().x - (-a)).abs() < 1e-10);
+        assert!((buffered_line[3].unwrap().y - a).abs() < 1e-10);
+        assert!((buffered_line[4].unwrap().x - a).abs() < 1e-10);
+        assert!((buffered_line[4].unwrap().y - (-a)).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_create_line_buffer_polyline() {
+        let line = vec![
+            Point2D::new(0.0, 0.0),
+            Point2D::new(0.0, 1.0),
+            Point2D::new(2.0, 1.0),
+        ];
+        let buffer = 0.2;
+        let buffered_line = create_line_buffer(&line, buffer).unwrap();
+        assert_eq!(buffered_line.len(), 7);
+        let a = (buffer.powi(2) / 2.0).sqrt();
+        assert!((buffered_line[0].unwrap().x - buffer).abs() < 1e-10);
+        assert!((buffered_line[0].unwrap().y).abs() < 1e-10);
+        assert!((buffered_line[1].unwrap().x - buffer).abs() < 1e-10);
+        assert!((buffered_line[1].unwrap().y - (1.0 - buffer)).abs() < 1e-10);
+        assert!((buffered_line[2].unwrap().x - 2.0).abs() < 1e-10);
+        assert!((buffered_line[2].unwrap().y - (1.0 - buffer)).abs() < 1e-10);
+        assert!((buffered_line[3].unwrap().x - 2.0).abs() < 1e-10);
+        assert!((buffered_line[3].unwrap().y - (1.0 + buffer)).abs() < 1e-10);
+        assert!((buffered_line[4].unwrap().x - (-buffer)).abs() < 1e-10);
+        assert!((buffered_line[4].unwrap().y - (1.0 + buffer)).abs() < 1e-10);
+        assert!((buffered_line[5].unwrap().x - (-buffer)).abs() < 1e-10);
+        assert!((buffered_line[5].unwrap().y).abs() < 1e-10);
+        assert!((buffered_line[6].unwrap().x - buffer).abs() < 1e-10);
+        assert!((buffered_line[6].unwrap().y).abs() < 1e-10);
     }
 }
