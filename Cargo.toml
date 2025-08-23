@@ -1,0 +1,16 @@
+[package]
+name = "bos-geo"
+version = "0.1.0"
+edition = "2024"
+description = "ToDo"
+readme = "README.md"
+license = "GPL-3.0-only"
+keywords = ["buffer-overlay-statistics", "algorithm", "geometry", "polyline", "completeness", "correctness", "precision", "recall", "rust", "python"]
+repository = "https://github.com/vassilijnadarajah/bos"
+
+[lib]
+name = "bos-geo"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.24", features = ["extension-module"] }
