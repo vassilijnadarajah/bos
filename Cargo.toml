@@ -9,7 +9,7 @@ keywords = ["buffer-overlay-statistics", "algorithm", "geometry", "polyline", "c
 repository = "https://github.com/vassilijnadarajah/bos"
 
 [lib]
-name = "bos-geo"
+name = "bos_geo"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
