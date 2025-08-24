@@ -4,7 +4,7 @@
 
 use crate::point2d::{AsPoint2D, Point2D};
 
-pub fn calc_line_polygon_overlay<T: AsPoint2D + Copy>(line: &Vec<T>, polygon: &Vec<Option<Point2D>>) -> f64 {
+pub fn calc_line_polygon_overlay<T: AsPoint2D + Copy>(line: &Vec<T>, polygon: &Vec<Point2D>) -> f64 {
     // ToDo
     0.0
 }
@@ -44,8 +44,9 @@ pub fn calc_line_length<T: AsPoint2D + Copy>(line: &Vec<T>) -> f64 {
 /// let buffer = 0.5;
 /// let buffered = create_line_buffer(&line, buffer);
 /// ```
-pub fn create_line_buffer<T: AsPoint2D + Copy>(line: &Vec<T>, buffer: f64) -> Option<Vec<Option<Point2D>>> {
-    let mut buffered_line: Vec<Option<Point2D>> = vec![None; 2 * line.len()];
+pub fn create_line_buffer<T: AsPoint2D + Copy>(line: &Vec<T>, buffer: f64) -> Option<Vec<Point2D>> {
+    let mut buffered_line = Vec::with_capacity(2 * line.len() + 1);
+    let mut buffer_left = Vec::with_capacity(line.len()); 
     if line.len() < 2 {
         return None; // Not enough points to create a buffer
     }
@@ -53,37 +54,37 @@ pub fn create_line_buffer<T: AsPoint2D + Copy>(line: &Vec<T>, buffer: f64) -> Op
         let current = &line[i].to_point2d();
         let next = if i < line.len() - 1 { Some(line[i + 1].to_point2d()) } else { None };
         let previous = if i > 0 { Some(line[i - 1].to_point2d()) } else { None };
-        let last_index = buffered_line.len() - 1;
-
+        
         if previous.is_none() {
             let new_point_right = get_orthogonal_point2d(current, &next.unwrap(), buffer);
             let new_point_left = *current + (*current - new_point_right);
-            buffered_line[i] = Some(new_point_right);
-            buffered_line[last_index - i] = Some(new_point_left);
+            buffered_line.push(new_point_right);
+            buffer_left.push(new_point_left);
         } else if next.is_none() {
             let new_point_right = get_orthogonal_point2d(current, &previous.unwrap(), -buffer);
             let new_point_left = *current + (*current - new_point_right);
-            buffered_line[i] = Some(new_point_right);
-            buffered_line[last_index - i] = Some(new_point_left);
+            buffered_line.push(new_point_right);
+            buffer_left.push(new_point_left);
         } else {
             // Get helper points
             let h1 = get_orthogonal_point2d(&previous.unwrap(), current, buffer);
             let h2 = h1 + (*current - previous.unwrap());
             let h3 = get_orthogonal_point2d(current, &next.unwrap(), buffer);
             let h4 = h3 + (next.unwrap() - *current);
-
+            
             // Calc intersection
             let intersection = calc_line_intersection(&h1, &h2, &h3, &h4);
             if let Some(intersection_point) = intersection {
-                buffered_line[i] = Some(intersection_point);
+                buffered_line.push(intersection_point);
             } else {
-                buffered_line[i] = Some(h2); // lines are parallel, hence use h2
+                buffered_line.push(h2); // lines are parallel, hence use h2
             }
-
-            buffered_line[last_index - i] = Some(*current - buffered_line[i].unwrap() + *current);
+            
+            buffer_left.push(*current - buffered_line[i] + *current);
         }
     }
 
+    buffered_line.extend(buffer_left.into_iter().rev());
     buffered_line.push(buffered_line[0]); // Close the polygon
 
     Some(buffered_line)
@@ -121,8 +122,6 @@ fn calc_line_intersection(a1: &Point2D, a2: &Point2D, b1: &Point2D, b2: &Point2D
 
 #[cfg(test)]
 mod tests {
-    use pyo3::buffer;
-
     use super::*;
 
     #[test]
@@ -177,16 +176,16 @@ mod tests {
         let buffered_line = create_line_buffer(&line, buffer).unwrap();
         let a = (buffer.powi(2) / 2.0).sqrt();
         assert_eq!(buffered_line.len(), 5);
-        assert!((buffered_line[0].unwrap().x - a).abs() < 1e-10);
-        assert!((buffered_line[0].unwrap().y - (-a)).abs() < 1e-10);
-        assert!((buffered_line[1].unwrap().x - (1.0 + a)).abs() < 1e-10);
-        assert!((buffered_line[1].unwrap().y - (1.0 - a)).abs() < 1e-10);
-        assert!((buffered_line[2].unwrap().x - (1.0 - a)).abs() < 1e-10);
-        assert!((buffered_line[2].unwrap().y - (1.0 + a)).abs() < 1e-10);
-        assert!((buffered_line[3].unwrap().x - (-a)).abs() < 1e-10);
-        assert!((buffered_line[3].unwrap().y - a).abs() < 1e-10);
-        assert!((buffered_line[4].unwrap().x - a).abs() < 1e-10);
-        assert!((buffered_line[4].unwrap().y - (-a)).abs() < 1e-10);
+        assert!((buffered_line[0].x - a).abs() < 1e-10);
+        assert!((buffered_line[0].y - (-a)).abs() < 1e-10);
+        assert!((buffered_line[1].x - (1.0 + a)).abs() < 1e-10);
+        assert!((buffered_line[1].y - (1.0 - a)).abs() < 1e-10);
+        assert!((buffered_line[2].x - (1.0 - a)).abs() < 1e-10);
+        assert!((buffered_line[2].y - (1.0 + a)).abs() < 1e-10);
+        assert!((buffered_line[3].x - (-a)).abs() < 1e-10);
+        assert!((buffered_line[3].y - a).abs() < 1e-10);
+        assert!((buffered_line[4].x - a).abs() < 1e-10);
+        assert!((buffered_line[4].y - (-a)).abs() < 1e-10);
     }
 
     #[test]
@@ -199,21 +198,20 @@ mod tests {
         let buffer = 0.2;
         let buffered_line = create_line_buffer(&line, buffer).unwrap();
         assert_eq!(buffered_line.len(), 7);
-        let a = (buffer.powi(2) / 2.0).sqrt();
-        assert!((buffered_line[0].unwrap().x - buffer).abs() < 1e-10);
-        assert!((buffered_line[0].unwrap().y).abs() < 1e-10);
-        assert!((buffered_line[1].unwrap().x - buffer).abs() < 1e-10);
-        assert!((buffered_line[1].unwrap().y - (1.0 - buffer)).abs() < 1e-10);
-        assert!((buffered_line[2].unwrap().x - 2.0).abs() < 1e-10);
-        assert!((buffered_line[2].unwrap().y - (1.0 - buffer)).abs() < 1e-10);
-        assert!((buffered_line[3].unwrap().x - 2.0).abs() < 1e-10);
-        assert!((buffered_line[3].unwrap().y - (1.0 + buffer)).abs() < 1e-10);
-        assert!((buffered_line[4].unwrap().x - (-buffer)).abs() < 1e-10);
-        assert!((buffered_line[4].unwrap().y - (1.0 + buffer)).abs() < 1e-10);
-        assert!((buffered_line[5].unwrap().x - (-buffer)).abs() < 1e-10);
-        assert!((buffered_line[5].unwrap().y).abs() < 1e-10);
-        assert!((buffered_line[6].unwrap().x - buffer).abs() < 1e-10);
-        assert!((buffered_line[6].unwrap().y).abs() < 1e-10);
+        assert!((buffered_line[0].x - buffer).abs() < 1e-10);
+        assert!((buffered_line[0].y).abs() < 1e-10);
+        assert!((buffered_line[1].x - buffer).abs() < 1e-10);
+        assert!((buffered_line[1].y - (1.0 - buffer)).abs() < 1e-10);
+        assert!((buffered_line[2].x - 2.0).abs() < 1e-10);
+        assert!((buffered_line[2].y - (1.0 - buffer)).abs() < 1e-10);
+        assert!((buffered_line[3].x - 2.0).abs() < 1e-10);
+        assert!((buffered_line[3].y - (1.0 + buffer)).abs() < 1e-10);
+        assert!((buffered_line[4].x - (-buffer)).abs() < 1e-10);
+        assert!((buffered_line[4].y - (1.0 + buffer)).abs() < 1e-10);
+        assert!((buffered_line[5].x - (-buffer)).abs() < 1e-10);
+        assert!((buffered_line[5].y).abs() < 1e-10);
+        assert!((buffered_line[6].x - buffer).abs() < 1e-10);
+        assert!((buffered_line[6].y).abs() < 1e-10);
     }
 
     #[test]
@@ -225,5 +223,29 @@ mod tests {
         ];
         let length = calc_line_length(&line);
         assert!((length - 15.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_line_polygon_overlay() {
+        let line = vec![
+            Point2D::new(-1, 1),
+            Point2D::new(3, 1),
+        ];
+        let polygon = vec![
+            Point2D::new(0, 0),
+            Point2D::new(1, 0),
+            Point2D::new(1, 2),
+            Point2D::new(0, 2),
+            Point2D::new(0, 0),
+        ];
+
+        let overlay = 1.0;
+        let result = calc_line_polygon_overlay(&line, &polygon);
+
+        assert!(
+            (result - overlay).abs() < 1e-10,
+            "Overlay is {} but should be {}",
+            result, overlay
+        );
     }
 }
