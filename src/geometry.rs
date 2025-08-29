@@ -161,13 +161,13 @@ fn calc_line_intersection(a1: &Point2D, a2: &Point2D, b1: &Point2D, b2: &Point2D
 /// Returns the intersection point as a Point2D, or None if lines are parallel or are intersecting outside the segments.
 fn calc_line_segment_intersection(a1: &Point2D, a2: &Point2D, b1: &Point2D, b2: &Point2D) -> Option<Point2D> {
     // signs of areas correspond to which side of ab points b1 and b2 are
-    let area1 = calc_signed_2d_triangle_area(&a1,&a2,&b2); // Compute winding of abd (+ or -)
+    let area1 = calc_signed_2d_triangle_area(&a1,&a2,&b2); // Compute winding of a1a2b2 (+ or -)
     let area2 = calc_signed_2d_triangle_area(&a1,&a2,&b1); // To intersect, must have sign opposite of area1
 
     // If b1 and b2 are on different sides of a1b1, areas have different signs
     if area1 * area2 < 0.0 { // require unsigned x & y values.
-        let area3 = calc_signed_2d_triangle_area(b1,b2,a1); // Compute winding of cda (+ or -)
-        let area4 = area3 + area2 - area1; // Since area is constant a1 - a2 = a3 - a4, or a4 = a3 + a2 - a1
+        let area3 = calc_signed_2d_triangle_area(b1,b2,a1); // Compute winding of b1b2a1 (+ or -)
+        let area4 = area3 + area2 - area1; // Since area is constant area1 - area2 = area3 - area4, or area4 = area3 + area2 - area1
 
         // Points a and b on different sides of b1b2 if areas have different signs
         if area3 * area4 < 0.0 {
