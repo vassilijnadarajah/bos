@@ -42,7 +42,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_completeness() {
+    fn test_completeness_simple() {
+        let prediction = vec![
+            Point2D::new(0, 0),
+            Point2D::new(2, 2),
+        ];
+        let ground_truth = vec![
+            Point2D::new(1, 1),
+            Point2D::new(3, 3),
+        ];
+        let buffer = 0.1;
+
+        let result = calc_completeness(&prediction, &ground_truth, buffer);
+        let completeness = 0.5;
+        assert!(
+            (result - completeness).abs() < 1e-10,
+            "Completeness is {} but should be {}",
+            result, completeness
+        );
+    }
+
+    #[test]
+    fn test_completeness_complex() {
         let prediction = vec![
             Point2D::new(-1, -2),
             Point2D::new(-1, 0),
@@ -51,14 +72,14 @@ mod tests {
         ];
         let ground_truth = vec![
             Point2D::new(-1, -2),
-            Point2D::new(-1, 1),
+            Point2D::new(-1, -1),
             Point2D::new(1, 1),
             Point2D::new(2, 1),
         ];
         let buffer = 0.2;
 
         let result = calc_completeness(&prediction, &ground_truth, buffer);
-        let completeness = 2.0 * 2.0_f64.sqrt() * buffer + 2.0;
+        let completeness = (2.0 * 2_f64.sqrt() * buffer + 2.0) / (2.0 * 2_f64.sqrt() + 2.0);
 
         assert!(
             (result - completeness).abs() < 1e-10,

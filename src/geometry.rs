@@ -4,9 +4,46 @@
 
 use crate::point2d::{AsPoint2D, Point2D};
 
+/// Calculates the overlay length of a line segment with a polygon
+///
+/// ## Parameters
+/// - `line`: Reference to a vector of `Point2D` representing the line segment.
+/// - `polygon`: Reference to a vector of `Point2D` representing the polygon.
+///
+/// ## Returns
+/// The overlay length of the line segment with the polygon.
 pub fn calc_line_polygon_overlay<T: AsPoint2D + Copy>(line: &Vec<T>, polygon: &Vec<Point2D>) -> f64 {
-    // ToDo
-    0.0
+    let mut overlay_length = 0.0;
+    let mut inside_polygon = is_point_in_polygon(&line[0].to_point2d(), polygon);
+    for i in 0..line.len() - 1 {
+        let l1 = line[i].to_point2d();
+        let l2 = line[i + 1].to_point2d();
+        let mut intersections: Vec<Point2D> = Vec::new();
+        
+        for j in 0..polygon.len() - 1 {
+            let p1 = polygon[j];
+            let p2 = polygon[j + 1];
+            
+            // Check for intersection
+            if let Some(intersection) = calc_line_segment_intersection(&l1, &l2, &p1, &p2) {
+                intersections.push(intersection);
+            }
+        }
+        
+        // Sort intersections by their distance to the line starting point
+        intersections.sort_by(|a, b| (l1 - *a).abs().partial_cmp(&(l1 - *b).abs()).unwrap());
+        
+        let mut current_point = l1;
+        for intersection in &intersections {
+            let distance = (*intersection - current_point).abs();
+            overlay_length += if inside_polygon { distance } else { 0.0 };
+            current_point = *intersection;
+            inside_polygon = if distance < 1e-10 { inside_polygon } else { !inside_polygon };
+        }
+        overlay_length += if inside_polygon { (l2 - current_point).abs() } else { 0.0 };
+    }
+
+    overlay_length
 }
 
 /// Calculates the total length of a polyline
@@ -120,6 +157,50 @@ fn calc_line_intersection(a1: &Point2D, a2: &Point2D, b1: &Point2D, b2: &Point2D
     Some(Point2D::new(a1.x + t * da.x, a1.y + t * da.y))
 }
 
+/// Calculate the intersection point of two line segments (a1, a2) and (b1, b2).
+/// Returns the intersection point as a Point2D, or None if lines are parallel or are intersecting outside the segments.
+fn calc_line_segment_intersection(a1: &Point2D, a2: &Point2D, b1: &Point2D, b2: &Point2D) -> Option<Point2D> {
+    // signs of areas correspond to which side of ab points b1 and b2 are
+    let area1 = calc_signed_2d_triangle_area(&a1,&a2,&b2); // Compute winding of abd (+ or -)
+    let area2 = calc_signed_2d_triangle_area(&a1,&a2,&b1); // To intersect, must have sign opposite of area1
+
+    // If b1 and b2 are on different sides of a1b1, areas have different signs
+    if area1 * area2 < 0.0 { // require unsigned x & y values.
+        let area3 = calc_signed_2d_triangle_area(b1,b2,a1); // Compute winding of cda (+ or -)
+        let area4 = area3 + area2 - area1; // Since area is constant a1 - a2 = a3 - a4, or a4 = a3 + a2 - a1
+
+        // Points a and b on different sides of b1b2 if areas have different signs
+        if area3 * area4 < 0.0 {
+            // Segments intersect. Find intersection point along L(t) = a1 + t * (a2 - a1).
+            let t = area3 / (area3 - area4);
+            let intersection = *a1 + (*a2 - *a1) * t; // the point of intersection
+            return Some(intersection);
+        }
+    }
+
+    // Segments not intersecting or collinear
+    None
+}
+
+/// Calculate the signed area of a 2D triangle formed by points a, b, and c.
+fn calc_signed_2d_triangle_area(a: &Point2D, b: &Point2D, c: &Point2D) -> f64 {
+    (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x)
+}
+
+/// Check if a point is inside a polygon using the ray-casting algorithm.
+fn is_point_in_polygon(point: &Point2D, polygon: &Vec<Point2D>) -> bool {
+    let mut inside = false;
+    let n = polygon.len();
+    for i in 0..n {
+        let j = (i + n - 1) % n;
+        if ((polygon[i].y > point.y) != (polygon[j].y > point.y)) &&
+           (point.x < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x) {
+            inside = !inside;
+        }
+    }
+    inside
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -226,7 +307,7 @@ mod tests {
     }
 
     #[test]
-    fn test_line_polygon_overlay() {
+    fn test_line_polygon_overlay_simple() {
         let line = vec![
             Point2D::new(-1, 1),
             Point2D::new(3, 1),
@@ -240,6 +321,32 @@ mod tests {
         ];
 
         let overlay = 1.0;
+        let result = calc_line_polygon_overlay(&line, &polygon);
+
+        assert!(
+            (result - overlay).abs() < 1e-10,
+            "Overlay is {} but should be {}",
+            result, overlay
+        );
+    }
+
+    #[test]
+    fn test_line_polygon_overlay_on_edge() {
+        let line = vec![
+            Point2D::new(-1.0, 0.5),
+            Point2D::new(1.0, 0.5),
+            Point2D::new(1.0, 1.5),
+            Point2D::new(-1.0, 1.5),
+        ];
+        let polygon = vec![
+            Point2D::new(0, 0),
+            Point2D::new(1, 0),
+            Point2D::new(1, 2),
+            Point2D::new(0, 2),
+            Point2D::new(0, 0),
+        ];
+
+        let overlay = 3.0;
         let result = calc_line_polygon_overlay(&line, &polygon);
 
         assert!(
