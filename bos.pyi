@@ -29,3 +29,19 @@ def calc_completeness(prediction: Union[List[Tuple[float, float]], List[List[flo
     Example:
         ToDo
     """
+
+def calc_correctness(prediction: Union[List[Tuple[float, float]], List[List[float]], np.ndarray], ground_truth: Union[List[Tuple[float, float]], List[List[float]], np.ndarray], buffer: float) -> float:
+    """
+    Calculates the correctness of a 2D line compared to the ground truth by using buffer-overlay-statistics.
+
+    Parameters:
+        prediction: A list of (x, y) tuples, a list of [x, y] lists, or a numpy array representing the predicted line.
+        ground_truth: A list of (x, y) tuples, a list of [x, y] lists, or a numpy array representing the ground truth line.
+        buffer: The buffer distance to consider for correctness.
+
+    Returns:
+        The correctness of the predicted line compared to the ground truth, represented by a value between 0 and 1.
+
+    Example:
+        ToDo
+    """
