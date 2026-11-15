@@ -5,10 +5,9 @@
 //! Input for which a metric does not exist is an error for both metrics, never a number and never
 //! a panic.
 
-use bos_geo::geometry::EndCap;
-use bos_geo::metrics::{
-    LineRole, MetricError, calc_completeness, calc_completeness_with_end_cap, calc_correctness,
-    calc_correctness_with_end_cap,
+use bos_geo::{
+    EndCap, LineRole, MetricError, calc_completeness, calc_completeness_with_end_cap,
+    calc_correctness, calc_correctness_with_end_cap,
 };
 
 type Line = Vec<[f64; 2]>;

@@ -2,7 +2,7 @@
 name = "bos-geo"
 version = "0.1.0"
 edition = "2024"
-description = "ToDo"
+description = "Buffer overlay statistics for 2D polylines: completeness (recall) and correctness (precision) of a predicted line against a ground truth line"
 readme = "README.md"
 license = "GPL-3.0-only"
 keywords = ["buffer-overlay-statistics", "algorithm", "geometry", "polyline", "completeness", "correctness", "precision", "recall", "rust", "python"]

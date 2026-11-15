@@ -22,8 +22,22 @@ use crate::point2d::Point2D;
 
 /// Shape of the buffer at the two ends of the buffered line.
 ///
-/// Along the line and at its interior vertices the buffer is always everything within the buffer
-/// distance, so joins between segments are round.
+/// Along the line and around the outside of its bends the buffer is always everything within the
+/// buffer distance, so joins between segments are round.
+///
+/// ```
+/// use bos_geo::{EndCap, calc_completeness_with_end_cap};
+///
+/// // The ground truth is 1 longer than the prediction at both ends.
+/// let prediction = [[0.0, 0.0], [8.0, 0.0]];
+/// let ground_truth = [[-1.0, 0.0], [9.0, 0.0]];
+///
+/// let round = calc_completeness_with_end_cap(&prediction, &ground_truth, 0.5, EndCap::Round)?;
+/// let flat = calc_completeness_with_end_cap(&prediction, &ground_truth, 0.5, EndCap::Flat)?;
+/// assert!((round - 0.9).abs() < 1e-12);
+/// assert!((flat - 0.8).abs() < 1e-12);
+/// # Ok::<(), bos_geo::MetricError>(())
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum EndCap {
     /// The buffer is everything within the buffer distance of the line. It reaches past the ends
@@ -68,7 +82,7 @@ pub(crate) fn covered_fraction(
         if segment.length_squared == 0.0 {
             continue;
         }
-        let length = segment.direction.abs();
+        let length = segment.direction.length();
 
         intervals.clear();
         buffer.intervals_on(&segment, &mut intervals);
@@ -136,7 +150,7 @@ impl Buffer {
                     end,
                     direction,
                     length_squared,
-                    cross_limit: radius * direction.abs(),
+                    cross_limit: radius * direction.length(),
                     incoming: pieces.last().map(|previous| previous.direction),
                     is_last: false,
                 });

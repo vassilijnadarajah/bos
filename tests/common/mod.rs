@@ -8,7 +8,7 @@
 // Each test binary uses its own subset of these helpers.
 #![allow(dead_code)]
 
-use bos_geo::geometry::EndCap;
+use bos_geo::EndCap;
 
 /// A polyline as the tests pass it to the library.
 pub type Line = Vec<[f64; 2]>;
@@ -86,11 +86,11 @@ pub fn shifted_sideways(line: &Line, distance: f64) -> Line {
 }
 
 pub fn completeness(prediction: &Line, ground_truth: &Line, buffer: f64) -> f64 {
-    bos_geo::metrics::calc_completeness(prediction, ground_truth, buffer).expect("valid input")
+    bos_geo::calc_completeness(prediction, ground_truth, buffer).expect("valid input")
 }
 
 pub fn correctness(prediction: &Line, ground_truth: &Line, buffer: f64) -> f64 {
-    bos_geo::metrics::calc_correctness(prediction, ground_truth, buffer).expect("valid input")
+    bos_geo::calc_correctness(prediction, ground_truth, buffer).expect("valid input")
 }
 
 pub fn completeness_with(
@@ -99,7 +99,7 @@ pub fn completeness_with(
     buffer: f64,
     end_cap: EndCap,
 ) -> f64 {
-    bos_geo::metrics::calc_completeness_with_end_cap(prediction, ground_truth, buffer, end_cap)
+    bos_geo::calc_completeness_with_end_cap(prediction, ground_truth, buffer, end_cap)
         .expect("valid input")
 }
 
@@ -109,7 +109,7 @@ pub fn correctness_with(
     buffer: f64,
     end_cap: EndCap,
 ) -> f64 {
-    bos_geo::metrics::calc_correctness_with_end_cap(prediction, ground_truth, buffer, end_cap)
+    bos_geo::calc_correctness_with_end_cap(prediction, ground_truth, buffer, end_cap)
         .expect("valid input")
 }
 
@@ -312,11 +312,7 @@ fn distance_to_segment(point: [f64; 2], a: [f64; 2], b: [f64; 2]) -> f64 {
 pub fn random_pair(rng: &mut Rng, case: usize) -> (Line, Line, f64) {
     let buffer = rng.uniform(0.05, 0.6);
     let vertices = 3 + rng.index(18);
-    let max_turn = if case % 2 == 0 {
-        0.3
-    } else {
-        std::f64::consts::PI
-    };
+    let max_turn = [0.3, std::f64::consts::PI][case % 2];
     let ground_truth = random_polyline(rng, vertices, max_turn);
     let prediction = if case % 4 < 2 {
         let noise = rng.uniform(0.5, 2.0) * buffer;

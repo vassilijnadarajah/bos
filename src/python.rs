@@ -5,8 +5,7 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
-use crate::geometry::EndCap;
-use crate::metrics::{self, MetricError};
+use crate::metrics::{self, EndCap, MetricError};
 
 #[pymodule]
 fn bos_geo(m: &Bound<'_, PyModule>) -> PyResult<()> {

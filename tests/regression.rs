@@ -7,7 +7,7 @@
 
 mod common;
 
-use bos_geo::geometry::EndCap;
+use bos_geo::EndCap;
 use common::{
     Line, Rng, assert_close, completeness, completeness_with, correctness, random_polyline,
     random_segment, shifted_sideways,
