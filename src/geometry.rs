@@ -99,6 +99,7 @@ struct Segment {
     start: Point2D,
     direction: Point2D,
     length_squared: f64,
+    bounds: Bounds,
 }
 
 impl Segment {
@@ -108,7 +109,32 @@ impl Segment {
             start,
             direction,
             length_squared: direction.dot(direction),
+            bounds: Bounds::of_segment(start, end),
         }
+    }
+}
+
+/// The axis-aligned bounding box of a segment.
+#[derive(Debug, Clone, Copy)]
+struct Bounds {
+    min: Point2D,
+    max: Point2D,
+}
+
+impl Bounds {
+    fn of_segment(a: Point2D, b: Point2D) -> Self {
+        Bounds {
+            min: Point2D::new(a.x.min(b.x), a.y.min(b.y)),
+            max: Point2D::new(a.x.max(b.x), a.y.max(b.y)),
+        }
+    }
+
+    /// How far apart the two boxes are along the axis that separates them most; negative if they
+    /// overlap. Two points, one in each box, are at least this far apart.
+    fn gap(&self, other: &Bounds) -> f64 {
+        let x = (self.min.x - other.max.x).max(other.min.x - self.max.x);
+        let y = (self.min.y - other.max.y).max(other.min.y - self.max.y);
+        x.max(y)
     }
 }
 
@@ -117,6 +143,9 @@ struct Buffer {
     radius: f64,
     end_cap: EndCap,
     pieces: Vec<BufferPiece>,
+    /// The bounding box of the segment of each piece. Kept apart from the pieces so that the
+    /// search for the pieces near a segment reads little memory.
+    bounds: Vec<Bounds>,
 }
 
 /// One segment of the buffered line. It stands for the rectangle around the segment and for the
@@ -160,16 +189,27 @@ impl Buffer {
         if let Some(last) = pieces.last_mut() {
             last.is_last = true;
         }
+        let bounds = pieces
+            .iter()
+            .map(|piece| Bounds::of_segment(piece.start, piece.end))
+            .collect();
         Buffer {
             radius,
             end_cap,
             pieces,
+            bounds,
         }
     }
 
     /// Appends the intervals of `segment` that lie in the pieces of the buffer.
     fn intervals_on(&self, segment: &Segment, intervals: &mut Vec<Interval>) {
-        for piece in &self.pieces {
+        for (piece, bounds) in self.pieces.iter().zip(&self.bounds) {
+            // Everything a piece stands for is within the radius of its segment. If the two
+            // segments are further apart than that along one axis, there is nothing to compute,
+            // and for two lines of many vertices this is the case for almost every pair.
+            if bounds.gap(&segment.bounds) > self.radius {
+                continue;
+            }
             intervals.extend(rectangle_interval(segment, piece));
             match self.end_cap {
                 // Everything within the radius: a full disc around every vertex.
@@ -453,6 +493,44 @@ mod tests {
             join_interval(&through, vertex, 1.0, east, west),
             (0.5, 0.75),
         );
+    }
+
+    #[test]
+    fn gap_between_bounding_boxes() {
+        let bounds = |a: (f64, f64), b: (f64, f64)| {
+            Bounds::of_segment(Point2D::new(a.0, a.1), Point2D::new(b.0, b.1))
+        };
+        let unit = bounds((0.0, 0.0), (1.0, 1.0));
+        // Apart along x, along y, and along both: the larger separation counts.
+        assert_eq!(unit.gap(&bounds((3.0, 0.5), (4.0, 0.25))), 2.0);
+        assert_eq!(unit.gap(&bounds((0.5, -1.5), (0.25, -4.0))), 1.5);
+        assert_eq!(unit.gap(&bounds((3.0, 5.0), (2.0, 4.0))), 3.0);
+        // The order of the end points and of the boxes does not matter.
+        assert_eq!(bounds((4.0, 0.25), (3.0, 0.5)).gap(&unit), 2.0);
+        // Touching and overlapping boxes.
+        assert_eq!(unit.gap(&bounds((1.0, 0.0), (2.0, 1.0))), 0.0);
+        assert_eq!(unit.gap(&bounds((0.75, 0.5), (2.0, 3.0))), -0.25);
+    }
+
+    #[test]
+    fn pieces_out_of_reach_are_skipped_and_only_those() {
+        // One piece from (0, 0) to (4, 0) with radius 0.5. Its end discs reach x = -0.5 and 4.5.
+        let buffered = line(&[(0.0, 0.0), (4.0, 0.0)]);
+        let buffer = Buffer::new(&buffered, Point2D::new(0.0, 0.0), 0.5, EndCap::Round);
+        let intervals_on = |segment: &Segment| {
+            let mut intervals = Vec::new();
+            buffer.intervals_on(segment, &mut intervals);
+            intervals
+        };
+
+        // 0.5 past the end along x: the segment touches the end disc in one point.
+        let touching = intervals_on(&segment((4.5, -1.0), (4.5, 1.0)));
+        assert_eq!(touching, vec![(0.5, 0.5)]);
+        // Just beyond that, and well beyond it along y.
+        assert!(intervals_on(&segment((4.75, -1.0), (4.75, 1.0))).is_empty());
+        assert!(intervals_on(&segment((1.0, 2.0), (3.0, 1.0))).is_empty());
+        // Bounding boxes within reach of each other, but the segment misses the buffer.
+        assert!(intervals_on(&segment((4.0, 1.0), (5.0, 0.0))).is_empty());
     }
 
     #[test]
