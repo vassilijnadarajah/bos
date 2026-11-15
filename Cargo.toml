@@ -11,6 +11,8 @@ repository = "https://github.com/vassilijnadarajah/bos"
 [lib]
 name = "bos_geo"
 crate-type = ["cdylib", "rlib"]
+# The benchmark is benches/metrics.rs; there is nothing to measure in the unit tests.
+bench = false
 
 [features]
 # Builds the Python extension module `bos_geo`. maturin turns it on (see pyproject.toml).
@@ -19,3 +21,7 @@ python = ["dep:pyo3"]
 
 [dependencies]
 pyo3 = { version = "0.24", optional = true }
+
+[[bench]]
+name = "metrics"
+harness = false
