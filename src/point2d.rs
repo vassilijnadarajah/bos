@@ -26,6 +26,17 @@ impl Point2D {
             y: self.y / magnitude,
         }
     }
+
+    /// Dot product of two vectors.
+    pub fn dot(self, other: Self) -> f64 {
+        self.x * other.x + self.y * other.y
+    }
+
+    /// Cross product of two vectors in the plane: the signed area of the parallelogram they span,
+    /// positive if `other` is counter-clockwise from `self`.
+    pub fn cross(self, other: Self) -> f64 {
+        self.x * other.y - self.y * other.x
+    }
 }
 
 impl Add for Point2D {

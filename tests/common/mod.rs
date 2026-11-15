@@ -8,6 +8,8 @@
 // Each test binary uses its own subset of these helpers.
 #![allow(dead_code)]
 
+use bos_geo::geometry::EndCap;
+
 /// A polyline as the tests pass it to the library.
 pub type Line = Vec<[f64; 2]>;
 
@@ -89,6 +91,24 @@ pub fn completeness(prediction: &Line, ground_truth: &Line, buffer: f64) -> f64 
 
 pub fn correctness(prediction: &Line, ground_truth: &Line, buffer: f64) -> f64 {
     bos_geo::metrics::calc_correctness(prediction, ground_truth, buffer)
+}
+
+pub fn completeness_with(
+    prediction: &Line,
+    ground_truth: &Line,
+    buffer: f64,
+    end_cap: EndCap,
+) -> f64 {
+    bos_geo::metrics::calc_completeness_with_end_cap(prediction, ground_truth, buffer, end_cap)
+}
+
+pub fn correctness_with(
+    prediction: &Line,
+    ground_truth: &Line,
+    buffer: f64,
+    end_cap: EndCap,
+) -> f64 {
+    bos_geo::metrics::calc_correctness_with_end_cap(prediction, ground_truth, buffer, end_cap)
 }
 
 #[track_caller]
