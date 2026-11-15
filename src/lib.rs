@@ -71,3 +71,8 @@ pub use metrics::{
     calc_correctness_with_end_cap,
 };
 pub use point2d::{AsPoint2D, Point2D};
+
+/// Runs the Rust example of the README as a documentation test.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeExamples;

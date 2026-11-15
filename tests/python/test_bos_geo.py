@@ -12,7 +12,9 @@ import ast
 import doctest
 import inspect
 import math
+import re
 from importlib import resources
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -217,3 +219,20 @@ def test_docstring_examples(documented):
     assert runner.failures == 0
     if documented is not bos_geo:
         assert runner.tries > 0
+
+
+def test_readme_examples():
+    readme = Path(__file__).parents[2] / "README.md"
+    blocks = re.findall(r"^```python\n(.*?)^```", readme.read_text(encoding="utf-8"), re.S | re.M)
+    assert blocks
+    names = {}
+    for number, block in enumerate(blocks, start=1):
+        examples = doctest.DocTestParser().get_doctest(
+            block, {}, f"README, Python block {number}", None, 0
+        )
+        # Later blocks use what earlier ones define, so all of them share their names.
+        examples.globs = names
+        runner = doctest.DocTestRunner()
+        runner.run(examples, clear_globs=False)
+        assert runner.tries > 0
+        assert runner.failures == 0
