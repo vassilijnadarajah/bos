@@ -6,7 +6,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 use crate::geometry::EndCap;
-use crate::metrics;
+use crate::metrics::{self, MetricError};
 
 #[pymodule]
 fn bos_geo(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -30,7 +30,7 @@ fn calc_completeness_wrapper(
         &ground_truth,
         buffer,
         end_cap,
-    ))
+    )?)
 }
 
 #[pyfunction]
@@ -48,7 +48,7 @@ fn calc_correctness_wrapper(
         &ground_truth,
         buffer,
         end_cap,
-    ))
+    )?)
 }
 
 fn parse_end_cap(end_cap: &str) -> PyResult<EndCap> {
@@ -58,5 +58,12 @@ fn parse_end_cap(end_cap: &str) -> PyResult<EndCap> {
         other => Err(PyValueError::new_err(format!(
             "end_cap must be \"round\" or \"flat\", got {other:?}"
         ))),
+    }
+}
+
+/// Unusable input is a `ValueError` in Python. The message starts with the name of the argument.
+impl From<MetricError> for PyErr {
+    fn from(error: MetricError) -> Self {
+        PyValueError::new_err(error.to_string())
     }
 }
