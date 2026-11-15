@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Rust
+    # A pull request from a branch of this repository is already tested by the push.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        run: cargo fmt --check
+      - name: Lint, including the Python binding
+        run: cargo clippy --all-targets --features python -- -D warnings
+      - name: Test
+        run: cargo test
+
+  python:
+    name: Python
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v7
+        with:
+          # The newest version that PyO3 0.24 supports.
+          python-version: "3.13"
+      - name: Install build and test tools
+        run: pip install maturin pytest numpy
+      - name: Build the wheel
+        run: maturin build --out dist
+      - name: Install the wheel
+        run: pip install --no-index --find-links dist bos-geo
+      - name: Test
+        run: pytest tests/python
