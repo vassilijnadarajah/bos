@@ -13,4 +13,7 @@ classifiers = [
 dynamic = ["version"]
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+# `python` compiles the binding (src/python.rs). `pyo3/extension-module` keeps the module from
+# linking libpython; PyO3 0.24 needs it spelled out. From PyO3 0.26 with maturin 1.9.4 the build
+# tool sets this itself and the second entry can go.
+features = ["python", "pyo3/extension-module"]

@@ -7,7 +7,7 @@ This library provides functions for evaluating quantative metrics commonly used 
 
 ### Usage
 ```
-import bos
+import bos_geo
 ```
 """
 

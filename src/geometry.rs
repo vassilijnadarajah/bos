@@ -77,9 +77,13 @@ pub fn calc_line_length<T: AsPoint2D + Copy>(line: &Vec<T>) -> f64 {
 ///
 /// ## Examples
 /// ```
+/// use bos_geo::geometry::create_line_buffer;
+/// use bos_geo::point2d::Point2D;
+///
 /// let line = vec![Point2D::new(0.0, 0.0), Point2D::new(1.0, 1.0)];
 /// let buffer = 0.5;
-/// let buffered = create_line_buffer(&line, buffer);
+/// let buffered = create_line_buffer(&line, buffer).unwrap();
+/// assert_eq!(buffered.len(), 5);
 /// ```
 pub fn create_line_buffer<T: AsPoint2D + Copy>(line: &Vec<T>, buffer: f64) -> Option<Vec<Point2D>> {
     let mut buffered_line = Vec::with_capacity(2 * line.len() + 1);

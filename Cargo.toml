@@ -12,5 +12,10 @@ repository = "https://github.com/vassilijnadarajah/bos"
 name = "bos_geo"
 crate-type = ["cdylib", "rlib"]
 
+[features]
+# Builds the Python extension module `bos_geo`. maturin turns it on (see pyproject.toml).
+# Without it the crate is plain Rust: `cargo build` and `cargo test` need no Python.
+python = ["dep:pyo3"]
+
 [dependencies]
-pyo3 = { version = "0.24", features = ["extension-module"] }
+pyo3 = { version = "0.24", optional = true }
