@@ -359,4 +359,64 @@ mod tests {
             result, overlay
         );
     }
+
+    // The three tests below pin the handling of a line that touches the polygon boundary without
+    // properly crossing it. The strict inequalities of the segment test miss such a contact, and
+    // the inside/outside state is wrong from there on.
+
+    fn square() -> Vec<Point2D> {
+        vec![
+            Point2D::new(0, 0),
+            Point2D::new(1, 0),
+            Point2D::new(1, 2),
+            Point2D::new(0, 2),
+            Point2D::new(0, 0),
+        ]
+    }
+
+    #[test]
+    #[ignore = "known defect of the polygon overlay; fixed by replacing the overlay core"]
+    fn test_line_polygon_overlay_vertex_on_boundary_then_leaving() {
+        let line = vec![
+            Point2D::new(-1.0, 0.5),
+            Point2D::new(1.0, 0.5),
+            Point2D::new(3.0, 0.5),
+        ];
+
+        let result = calc_line_polygon_overlay(&line, &square());
+
+        assert!((result - 1.0).abs() < 1e-10, "Overlay is {} but should be 1", result);
+    }
+
+    #[test]
+    #[ignore = "known defect of the polygon overlay; fixed by replacing the overlay core"]
+    fn test_line_polygon_overlay_through_corners() {
+        let line = vec![Point2D::new(-1, -1), Point2D::new(3, 3)];
+        let unit_square = vec![
+            Point2D::new(0, 0),
+            Point2D::new(1, 0),
+            Point2D::new(1, 1),
+            Point2D::new(0, 1),
+            Point2D::new(0, 0),
+        ];
+
+        let overlay = 2_f64.sqrt();
+        let result = calc_line_polygon_overlay(&line, &unit_square);
+
+        assert!(
+            (result - overlay).abs() < 1e-10,
+            "Overlay is {} but should be {}",
+            result, overlay
+        );
+    }
+
+    #[test]
+    #[ignore = "known defect of the polygon overlay; fixed by replacing the overlay core"]
+    fn test_line_polygon_overlay_starting_on_boundary() {
+        let line = vec![Point2D::new(1.0, 0.5), Point2D::new(0.5, 0.5)];
+
+        let result = calc_line_polygon_overlay(&line, &square());
+
+        assert!((result - 0.5).abs() < 1e-10, "Overlay is {} but should be 0.5", result);
+    }
 }
