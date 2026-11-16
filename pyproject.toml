@@ -1,10 +1,10 @@
 [build-system]
-requires = ["maturin>=1.0,<2.0"]
+requires = ["maturin>=1.9.4,<2.0"]
 build-backend = "maturin"
 
 [project]
 name = "bos-geo"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -13,4 +13,7 @@ classifiers = [
 dynamic = ["version"]
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+# `python` compiles the binding (src/python.rs). maturin 1.9.4 or later keeps the module from
+# linking libpython by itself; PyO3's `extension-module` feature, which used to do that, is
+# deprecated.
+features = ["python"]

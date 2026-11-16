@@ -2,7 +2,7 @@
 name = "bos-geo"
 version = "0.1.0"
 edition = "2024"
-description = "ToDo"
+description = "Buffer overlay statistics for 2D polylines: completeness (recall) and correctness (precision) of a predicted line against a ground truth line"
 readme = "README.md"
 license = "GPL-3.0-only"
 keywords = ["buffer-overlay-statistics", "algorithm", "geometry", "polyline", "completeness", "correctness", "precision", "recall", "rust", "python"]
@@ -11,6 +11,17 @@ repository = "https://github.com/vassilijnadarajah/bos"
 [lib]
 name = "bos_geo"
 crate-type = ["cdylib", "rlib"]
+# The benchmark is benches/metrics.rs; there is nothing to measure in the unit tests.
+bench = false
+
+[features]
+# Builds the Python extension module `bos_geo`. maturin turns it on (see pyproject.toml).
+# Without it the crate is plain Rust: `cargo build` and `cargo test` need no Python.
+python = ["dep:pyo3"]
 
 [dependencies]
-pyo3 = { version = "0.24", features = ["extension-module"] }
+pyo3 = { version = "0.30", optional = true }
+
+[[bench]]
+name = "metrics"
+harness = false
