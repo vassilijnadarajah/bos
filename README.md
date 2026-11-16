@@ -31,6 +31,7 @@ Let $G$ be the ground truth, $P$ the prediction and $b$ the tolerance, which is 
 \end{aligned}
 ```
 
+Both are shares between 0 and 1. The paper reports `1 - correctness` under the name *miscodings*.
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/figures/overlay-dark.svg">
@@ -38,7 +39,6 @@ Let $G$ be the ground truth, $P$ the prediction and $b$ the tolerance, which is 
   </picture>
 </p>
 
-Both are shares between 0 and 1. The paper reports `1 - correctness` under the name *miscodings*.
 
 ### The buffer
 
