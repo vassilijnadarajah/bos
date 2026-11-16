@@ -2,7 +2,10 @@ name: CI
 
 on:
   push:
+    # Branches only. A tag push starts release.yml, which calls this workflow itself.
+    branches: ['**']
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
@@ -10,8 +13,9 @@ permissions:
 jobs:
   rust:
     name: Rust
-    # A pull request from a branch of this repository is already tested by the push.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    # A pull request from a branch of this repository is already tested by the push. Called from
+    # release.yml, the event is the one of the caller: a tag push or a manual start.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -26,13 +30,13 @@ jobs:
       - name: Format
         run: cargo fmt --check
       - name: Lint, including the Python binding
-        run: cargo clippy --all-targets --features python -- -D warnings
+        run: cargo clippy --locked --all-targets --features python -- -D warnings
       - name: Test
-        run: cargo test
+        run: cargo test --locked
 
   python:
     name: Python
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -44,7 +48,7 @@ jobs:
       - name: Install build and test tools
         run: pip install maturin pytest numpy
       - name: Build the wheel
-        run: maturin build --out dist
+        run: maturin build --locked --out dist
       - name: Install the wheel
         run: pip install --no-index --find-links dist bos-geo
       - name: Test

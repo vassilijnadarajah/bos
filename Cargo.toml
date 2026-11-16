@@ -7,6 +7,9 @@ readme = "README.md"
 license = "GPL-3.0-only"
 keywords = ["buffer-overlay-statistics", "algorithm", "geometry", "polyline", "completeness", "correctness", "precision", "recall", "rust", "python"]
 repository = "https://github.com/vassilijnadarajah/bos"
+# Kept out of `cargo package` and so out of the Python source distribution, which holds the same
+# files. `tests/` and `benches/` stay in.
+exclude = [".github/", ".vscode/", "AgentDocs/", "docs/", "literature/", "sample/"]
 
 [lib]
 name = "bos_geo"
@@ -17,7 +20,10 @@ bench = false
 [features]
 # Builds the Python extension module `bos_geo`. maturin turns it on (see pyproject.toml).
 # Without it the crate is plain Rust: `cargo build` and `cargo test` need no Python.
-python = ["dep:pyo3"]
+# `abi3-py39` limits the binding to Python's stable ABI: one wheel per platform serves CPython 3.9
+# and every later version. It is set here and not in pyproject.toml so that clippy lints what is
+# shipped.
+python = ["dep:pyo3", "pyo3/abi3-py39"]
 
 [dependencies]
 pyo3 = { version = "0.30", optional = true }
