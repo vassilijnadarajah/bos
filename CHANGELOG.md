@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.0 - 2026-11-17
+
 First release.
 
 - `calc_completeness` (recall) and `calc_correctness` (precision) for two 2D polylines, after the
