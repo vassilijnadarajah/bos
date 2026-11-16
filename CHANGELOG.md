@@ -37,6 +37,8 @@ decimals.
   `&Vec<T>`.
 - Rust: `Point2D::abs` is now `Point2D::length`, `Point2D::norm` is now `Point2D::normalized`, and
   the dot product is `Point2D::dot` instead of `Point2D * Point2D`.
+- Python: CPython 3.9 to 3.15 is supported, with PyO3 0.30. Before, it was 3.8 to 3.13, with
+  PyO3 0.24.
 - Rust: PyO3 is an optional dependency behind the cargo feature `python`. Without it the crate has
   no dependencies, and `cargo test` needs no Python.
 

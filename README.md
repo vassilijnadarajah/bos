@@ -78,7 +78,7 @@ pip install bos-geo    # from PyPI, once a release is published there
 pip install .          # from a checkout of this repository; needs a Rust toolchain
 ```
 
-CPython 3.8 to 3.13 is supported. NumPy is optional.
+CPython 3.9 to 3.15 is supported. NumPy is optional.
 
 ### Rust
 

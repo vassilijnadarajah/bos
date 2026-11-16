@@ -18,6 +18,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - uses: actions/setup-python@v7
+        with:
+          # The `python` feature builds PyO3, which looks for an interpreter and refuses one newer
+          # than it supports. Pinned so that a new runner image cannot break the lint.
+          python-version: "3.15"
       - name: Format
         run: cargo fmt --check
       - name: Lint, including the Python binding
@@ -34,8 +39,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v7
         with:
-          # The newest version that PyO3 0.24 supports.
-          python-version: "3.13"
+          # The newest version that PyO3 0.30 supports.
+          python-version: "3.15"
       - name: Install build and test tools
         run: pip install maturin pytest numpy
       - name: Build the wheel

@@ -20,7 +20,7 @@ bench = false
 python = ["dep:pyo3"]
 
 [dependencies]
-pyo3 = { version = "0.24", optional = true }
+pyo3 = { version = "0.30", optional = true }
 
 [[bench]]
 name = "metrics"
