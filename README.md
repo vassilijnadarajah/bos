@@ -26,8 +26,8 @@ Let $G$ be the ground truth, $P$ the prediction and $b$ the tolerance, which is 
 
 ```math
 \begin{aligned}
-\text{completeness} &= \frac{\operatorname{length}\bigl(G \cap B_b(P)\bigr)}{\operatorname{length}(G)} \\[2ex]
-\text{correctness} &= \frac{\operatorname{length}\bigl(P \cap B_b(G)\bigr)}{\operatorname{length}(P)}
+\text{completeness} &= \frac{\mathrm{length}\bigl(G \cap B_b(P)\bigr)}{\mathrm{length}(G)} \\[2ex]
+\text{correctness} &= \frac{\mathrm{length}\bigl(P \cap B_b(G)\bigr)}{\mathrm{length}(P)}
 \end{aligned}
 ```
 
