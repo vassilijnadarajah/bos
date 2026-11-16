@@ -222,7 +222,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { artifact: wheels-linux-x86_64, runner: ubuntu-latest, python: "3.9" }
+          # Not ubuntu-latest: setup-python has no Python 3.9 for Ubuntu 26.04.
+          - { artifact: wheels-linux-x86_64, runner: ubuntu-24.04, python: "3.9" }
           - { artifact: wheels-linux-x86_64, runner: ubuntu-latest, python: "3.15" }
           - { artifact: wheels-windows-x64, runner: windows-latest, python: "3.9" }
           - { artifact: wheels-windows-x64, runner: windows-latest, python: "3.15" }

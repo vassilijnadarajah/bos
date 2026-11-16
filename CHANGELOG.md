@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.0 - 2026-11-17
+
 First release.
 
 - `calc_completeness` (recall) and `calc_correctness` (precision) for two 2D polylines, after the
@@ -15,6 +17,6 @@ First release.
 - Input without a result is an error, never a number: a line with fewer than two distinct points,
   a coordinate that is NaN or infinite, a buffer that is not a finite number greater than 0.
   Python raises `ValueError`; Rust returns `MetricError`.
-- Python: the module `bos_geo` for CPython 3.9 to 3.15. A line is a sequence of `(x, y)` pairs or
+- Python: the module `bos_geo` for CPython 3.9 and later. A line is a sequence of `(x, y)` pairs or
   an `(N, 2)` NumPy array. A type stub and a `py.typed` marker are included.
 - Rust: the crate has no dependencies. The Python binding is behind the cargo feature `python`.
