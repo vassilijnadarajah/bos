@@ -179,6 +179,39 @@ check the properties that follow from the definition. `tests/python` covers what
 The Python docstrings live in `src/python.rs` and are repeated in the type stub `bos_geo.pyi`; a
 test fails if the two differ.
 
+### Releasing
+
+A release is a tag `vX.Y.Z` on `main`. Pushing the tag starts `.github/workflows/release.yml`. It
+runs the tests, builds the wheels and the source distribution, installs and tests what it built,
+publishes the files to PyPI and creates the GitHub release with the changelog entry.
+
+1. Set `version` in `Cargo.toml` and run `cargo check`, so that `Cargo.lock` follows.
+2. In `CHANGELOG.md`, rename `## Unreleased` to `## X.Y.Z - <date>` and add an empty
+   `## Unreleased` above it.
+3. Set the tag in the Rust dependency example of this README to the new version.
+4. Merge this into `main` and wait for CI.
+5. Tag that commit and push the tag. The tag is annotated and starts with `v`.
+
+   ```sh
+   git tag -a vX.Y.Z -m "bos-geo X.Y.Z"
+   git push origin vX.Y.Z
+   ```
+
+6. When the workflow is through, run `pip install bos-geo==X.Y.Z` in a fresh virtual environment
+   and try the example above.
+
+The workflow refuses a tag that differs from the version in `Cargo.toml`, has no changelog entry
+or is not on `main`. Started by hand (Actions, "Release", "Run workflow") it is a dry run: it does
+everything except the upload to PyPI and the GitHub release.
+
+If a release fails:
+
+| Where | State | What to do |
+|---|---|---|
+| Before "Publish to PyPI" | Nothing is on PyPI | If a runner failed, re-run the failed jobs. If the code is at fault, fix it on `main`, delete the tag locally and on GitHub, and tag the new commit |
+| In "Publish to PyPI" | Some files are on PyPI | Re-run the job. It uploads the files that are missing |
+| After the release | A defect is public | Files on PyPI cannot be replaced. Yank the release on PyPI and publish the next patch version. Do not move the tag |
+
 ## Reference
 
 Tveite, H. and Langaas, S. (1999). An accuracy assessment method for geographical line data sets
