@@ -8,12 +8,19 @@ requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dynamic = ["version"]
+# Taken from Cargo.toml. maturin copies only the fields that are listed here; without the list the
+# package on PyPI has no description, no README and no licence.
+dynamic = ["version", "description", "readme", "license", "keywords", "urls"]
 
 [tool.maturin]
 # `python` compiles the binding (src/python.rs). maturin 1.9.4 or later keeps the module from
 # linking libpython by itself; PyO3's `extension-module` feature, which used to do that, is
 # deprecated.
 features = ["python"]
+
+# Read by `maturin generate-ci github`, the starting point of .github/workflows/release.yml.
+# `publishing-environment` is the GitHub environment that PyPI trusts as publisher.
+[tool.maturin.generate-ci.github]
+trusted-publishing = true
+publishing-environment = "pypi"

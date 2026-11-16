@@ -85,7 +85,7 @@ Only distance counts.
 ### Python
 
 ```sh
-pip install bos-geo    # from PyPI, once a release is published there
+pip install bos-geo    # from PyPI
 pip install .          # from a checkout of this repository; needs a Rust toolchain
 ```
 
@@ -95,7 +95,7 @@ CPython 3.9 to 3.15 is supported. NumPy is optional.
 
 ```toml
 [dependencies]
-bos-geo = { git = "https://github.com/vassilijnadarajah/bos" }
+bos-geo = { git = "https://github.com/vassilijnadarajah/bos", tag = "v0.1.0" }
 ```
 
 The Python binding is behind the cargo feature `python`, which is off by default: the crate builds
