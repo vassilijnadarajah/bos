@@ -21,10 +21,22 @@ The method is the buffer overlay statistics (BOS) of Tveite and Langaas (1999). 
 counts as matched if it lies within a tolerance of the other line. The zone within that tolerance
 of a line is the line's *buffer*.
 
-```text
-completeness = Length(ground truth inside the buffer of the prediction) / Length(ground truth)
-correctness  = Length(prediction inside the buffer of the ground truth) / Length(prediction)
+Let $G$ be the ground truth, $P$ the prediction and $b$ the tolerance, which is the argument
+`buffer`, and $B_b(X)$ the buffer of a line $X$ for that tolerance.
+
+```math
+\begin{aligned}
+\text{completeness} &= \frac{\operatorname{length}\bigl(G \cap B_b(P)\bigr)}{\operatorname{length}(G)} \\[2ex]
+\text{correctness} &= \frac{\operatorname{length}\bigl(P \cap B_b(G)\bigr)}{\operatorname{length}(P)}
+\end{aligned}
 ```
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/figures/overlay-dark.svg">
+    <img src="docs/figures/overlay-light.svg" alt="Two panels with the same two lines. Completeness: the buffer lies around the prediction; the ground truth inside it is found, the rest is missed. Correctness: the buffer lies around the ground truth; the prediction inside it is right, the rest is wrong.">
+  </picture>
+</p>
 
 Both are shares between 0 and 1. The paper reports `1 - correctness` under the name *miscodings*.
 
@@ -37,13 +49,12 @@ line. This is the buffer that a GIS buffer operation produces.
 If a line should not be credited for anything beyond its own ends, choose flat ends
 (`end_cap="flat"` in Python, `EndCap::Flat` in Rust). Bends stay round.
 
-```text
-        round ends (default)                 flat ends
-
-     .---------------------.            +-----------------+
-    (   o-----------------o   )         o-----------------o
-     '---------------------'            +-----------------+
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/figures/end-caps-dark.svg">
+    <img src="docs/figures/end-caps-light.svg" alt="The buffer of a prediction with one bend, drawn twice. With round ends the buffer reaches b past the two ends of the prediction, and ground truth that continues past an end is inside it for a short stretch. With flat ends the buffer stops at the ends, and that stretch is outside. The bend is round in both.">
+  </picture>
+</p>
 
 The lengths are computed exactly from this definition. No buffer polygon is built: the buffer is
 the union of a rectangle around every segment and a disc around every vertex, a segment of the
