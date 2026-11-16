@@ -34,8 +34,8 @@ Let $G$ be the ground truth, $P$ the prediction and $b$ the tolerance, which is 
 Both are shares between 0 and 1. The paper reports `1 - correctness` under the name *miscodings*.
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/figures/overlay-dark.svg">
-    <img src="docs/figures/overlay-light.svg" alt="Two panels with the same two lines. Completeness: the buffer lies around the prediction; the ground truth inside it is found, the rest is missed. Correctness: the buffer lies around the ground truth; the prediction inside it is right, the rest is wrong.">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vassilijnadarajah/bos/main/docs/figures/overlay-dark.svg">
+    <img src="https://raw.githubusercontent.com/vassilijnadarajah/bos/main/docs/figures/overlay-light.svg" alt="Two panels with the same two lines. Completeness: the buffer lies around the prediction; the ground truth inside it is found, the rest is missed. Correctness: the buffer lies around the ground truth; the prediction inside it is right, the rest is wrong.">
   </picture>
 </p>
 
@@ -51,8 +51,8 @@ If a line should not be credited for anything beyond its own ends, choose flat e
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/figures/end-caps-dark.svg">
-    <img src="docs/figures/end-caps-light.svg" alt="The buffer of a prediction with one bend, drawn twice. With round ends the buffer reaches b past the two ends of the prediction, and ground truth that continues past an end is inside it for a short stretch. With flat ends the buffer stops at the ends, and that stretch is outside. The bend is round in both.">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vassilijnadarajah/bos/main/docs/figures/end-caps-dark.svg">
+    <img src="https://raw.githubusercontent.com/vassilijnadarajah/bos/main/docs/figures/end-caps-light.svg" alt="The buffer of a prediction with one bend, drawn twice. With round ends the buffer reaches b past the two ends of the prediction, and ground truth that continues past an end is inside it for a short stretch. With flat ends the buffer stops at the ends, and that stretch is outside. The bend is round in both.">
   </picture>
 </p>
 
